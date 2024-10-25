@@ -3,8 +3,9 @@ A language agnostic build system in JSON5. Currently only has partial support fo
 
 NOTE: jvbuild is in early beta. Do not expect it to be stable.
 
-## Example
-See test/test.json for example build.json5
+## Examples
+See test/test.json for example build.json5.  
+See [https://github.com/zwebsuite/zcanvas](https://github.com/zwebsuite/zcanvas) for example of a full project using jvbuild.
 
 ## Docs
 See docs.md for documentation
