@@ -303,7 +303,7 @@ FileModule? parseBuildFile(String filePath, bool isEntrypoint) {
     return null;
 }
 
-void zig_build_run(String command, FileModule fileModule, String buildMode, String optimizationLevel, bool verbose) async {
+void zig_build_run(String command, FileModule fileModule, String buildMode, String optimizationLevel, bool verbose, String outputPath) async {
     List<String> callArgs = [command == "run" ? "run" : "build-exe", "-D_REENTRANT"];
     final jvmods = fileModule.mods;
     final buildEntryNames = fileModule.buildModes[buildMode] as List<String>;
@@ -339,6 +339,7 @@ void zig_build_run(String command, FileModule fileModule, String buildMode, Stri
 
     var linkLibC = false;
     var exeName = "";
+    var entryIsLib = false;
     for (var i = 0; i < jvmods.length; i++) {
         final mod = jvmods[i];
 
@@ -348,7 +349,9 @@ void zig_build_run(String command, FileModule fileModule, String buildMode, Stri
                 callArgs.add("${mod.dependencies[j]}");
             }
             callArgs.add("-M${mod.name}=${mod.root}");
-        } else if (mod.name == buildEntryName) {
+        }
+        
+        if (mod.name == buildEntryName) {
             for (var j = 0; j < mod.dependencies.length; j++) {
                 callArgs.add("--dep");
                 callArgs.add("${mod.dependencies[j]}");
@@ -359,13 +362,15 @@ void zig_build_run(String command, FileModule fileModule, String buildMode, Stri
                 callArgs.add("-l${sysLibName}");
             }
 
-            callArgs.add("-Mroot=${mod.root}");
-
             if (mod.linkLibC) {
                 linkLibC = true;
             }
             
             exeName = mod.name;
+            entryIsLib = mod.isLib;
+            if (!entryIsLib) {
+                callArgs.add("-Mroot=${mod.root}");
+            }
         }
 
         switch (optimizationLevel) {
@@ -382,16 +387,22 @@ void zig_build_run(String command, FileModule fileModule, String buildMode, Stri
         }
     }
 
+    if (entryIsLib && callArgs[0] == "build-exe") {
+        callArgs[0] = "build-lib";
+        callArgs.add("-dynamic");
+    }
+
     if (linkLibC) {
         callArgs.add("-lc");
     }
 
+    final finalOutputPath = (outputPath.length > 0) ? outputPath : "./zig-out/bin/${exeName}${entryIsLib ? ".so" : ""}";
     if (command == "build") {
         callArgs.add("--cache-dir");
         callArgs.add("./.zig-cache");
         callArgs.add("--global-cache-dir");
         callArgs.add("/home/vexcess/.cache/zig");
-        callArgs.add("-femit-bin=./zig-out/bin/${exeName}");
+        callArgs.add("-femit-bin=${finalOutputPath}");
     }
 
     final file = File("./zig-out/bin/${exeName}");
@@ -519,8 +530,10 @@ examples:
 
 void main(List<String> arguments) {
     var filePath = "build.json5";
+    var outputPath = "";
     var optimizationLevel = "default";
     var buildMode = "default";
+    var hasOutputPath = false;
     var hasOptimizationLevel = false;
     var hasBuildMode = false;
     var isVerbose = false;
@@ -540,6 +553,19 @@ void main(List<String> arguments) {
                 print("jvbuild: invalid option argument");
                 return;
             }
+        } else if (arg.startsWith("-o") || arg.startsWith("--output")) {
+            if (hasOutputPath) {
+                print("jvbuild: too many output path arguments");
+                return;
+            }
+            final argVal = arg.split("=");
+            if (argVal.length == 2) {
+                outputPath = argVal[1];
+            } else {
+                print("jvbuild: invalid option argument");
+                return;
+            }
+            hasOptimizationLevel = true;
         } else if (arg.startsWith("-O") || arg.startsWith("--Optimize")) {
             if (hasOptimizationLevel) {
                 print("jvbuild: too many optimization level arguments");
@@ -578,9 +604,9 @@ void main(List<String> arguments) {
     if (parsedFile != null) {
         for (var i = 0; i < parsedFile.mods.length; i++) {
             final mod = parsedFile.mods[i];
-            if (!mod.isLib) {
+            // if (!mod.isLib) {
                 mod.propogateDependencies(parsedFile.mods);
-            }
+            // }
         }
 
         switch (parsedFile.lang) {
@@ -602,7 +628,7 @@ void main(List<String> arguments) {
                             print("did you mean `${maxSimBuildMode}`?");
                             return;
                         }
-                        zig_build_run(command, parsedFile, buildMode, optimizationLevel, isVerbose);
+                        zig_build_run(command, parsedFile, buildMode, optimizationLevel, isVerbose, outputPath);
                     case "translate":
                         print(gen_build_zig(parsedFile, buildMode, optimizationLevel));
                 }

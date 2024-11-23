@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 const PACKAGE_NAME = "jvbuild";
-const PACKAGE_VERSION = "0.0.1";
+const PACKAGE_VERSION = "0.0.2";
 const PACKAGE_AUTHOR = "VExcess <github.com/vExcess>";
 const PACKAGE_DESCRIPTION = """
     Cross platform, language agnostic build
