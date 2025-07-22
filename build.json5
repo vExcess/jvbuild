@@ -1,0 +1,29 @@
+{
+    name: "jvbuild",
+    description: "JSON5-based and language-agnostic package manager, build system, and distribution tool.",
+    author: "VExcess <github.com/vexcess>",
+    repository: "https://github.com/vExcess/jvbuild",
+    
+    modules: {
+        jvbuild: {
+            version: "1.1.0",
+            root: "src/jvbuild.dart",
+            dependencies: [
+                "json5",
+                "image",
+            ]
+        },
+
+        json5: {
+            type: "dart:lib",
+            version: "^0.8.2"
+        },
+
+        image: {
+            type: "dart:lib",
+            version: "^4.5.4"
+        },
+    },
+
+    default: "jvbuild"
+}

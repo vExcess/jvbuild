@@ -1,38 +1,29 @@
 # jvbuild
-A language agnostic build system in JSON5. Currently only has partial support for Zig. Feel free to create pull request expanding Zig support or adding support for other languages.
+**J**SON5 **v**ersioned **build** system. jvbuild is a language-agnostic package manager, build system, and distribution tool.
 
-NOTE: jvbuild is in early beta. Do not expect it to be stable.
+NOTE: I would consider jvbuild a beta software. Do not expect it to be stable or complete.
 
-## Examples
-See test/test.json for example build.json5.  
-See [https://github.com/zwebsuite/zcanvas](https://github.com/zwebsuite/zcanvas) for example of a full project using jvbuild.
+## Currently Support Languages
+- Zig
+- Dart
+
+## Distribution Formats
+- Debian Package (.deb)
+- Fedora (.rpm) [Not Yet Implemented]
+- Windows (.msi) [Not Yet Implemented]
+
+## Example
+See [https://github.com/librepaint/librepaint-3d](https://github.com/librepaint/librepaint-3d) for an example of a full project using jvbuild.
 
 ## Docs
-See docs.md for documentation
-
-## Usage
-```
-jvbuild [buildMode] [options]
-jvbuild [command] [buildMode] [flags]
-
-commands:
-  build      build the project without running it
-  run        run the project
-  translate  translate build.json5 to [build.zig, package.json, pubspec.yaml]
-
-flags:
-  -O, --Optimize  Set optimization level [debug, small, fast, safe]. Debug is the default
-  -o, --output    Set output file
-  -h, --help      Display help dialog
-  -p, --path      Path to build.json5 (defaults to ./build.json5)
-  -v, --verbose   Print module tree and compiler commands
-
-examples:
-  jvbuild build
-  jvbuild translate --output=build.zig
-  jvbuild run -p=myBuildFile.json5
-  jvbuild run myBuildMode -O=Fast
-```
+See [docs.md](https://github.com/vExcess/jvbuild/blob/main/docs.md) for usage and documentation
 
 ## Building
-`dart run deb-build.dart` will build the project and then generate a deb package for it. The compiled binary and deb package will be in the dist directory.
+jvbuild is self hosted! First use `dart run` to run jvbuild's `build` command on itself. This compiles jvbuild and outputs it to the `.jvbuild-out` directory.
+```bash
+dart run src/jvbuild.dart build
+```
+Next use the compiled jvbuild binary to package itself for distribution
+```bash
+./.jvbuild-out/jvbuild package
+```
