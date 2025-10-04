@@ -19,11 +19,11 @@ See [https://github.com/librepaint/librepaint-3d](https://github.com/librepaint/
 See [docs.md](https://github.com/vExcess/jvbuild/blob/main/docs.md) for usage and documentation
 
 ## Building
-jvbuild is self hosted! First use `dart run` to run jvbuild's `build` command on itself. This compiles jvbuild and outputs it to the `.jvbuild-out` directory.
+jvbuild is self hosted! First use `dart run` to run jvbuild's `build` command on itself. This compiles jvbuild and outputs it to the `jvbuild-out` directory.
 ```bash
 dart run src/jvbuild.dart build
 ```
 Next use the compiled jvbuild binary to package itself for distribution
 ```bash
-./.jvbuild-out/jvbuild package
+./jvbuild-out/jvbuild package
 ```

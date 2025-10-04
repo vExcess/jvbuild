@@ -90,7 +90,7 @@ void package(JVModule module, CommandArgs args) async {
 
     final arch = await getCPUArchitecture();
 
-    final EXE_FILE_PATH = "./.jvbuild-out/${packageName}";
+    final EXE_FILE_PATH = "./jvbuild-out/${packageName}";
     final fileSize = (await File(EXE_FILE_PATH).length()) / 1024;
 
     Map<String, String> cpuArchToDebArch = {
@@ -202,9 +202,9 @@ exit 0""";
     }
 
     // copy over compiled binaries, metadata, and install scripts
-    mkdir("./.jvbuild-out");
-    mv(EXE_FILE_PATH, "./.jvbuild-out/${packageName}");
-    cp("./.jvbuild-out/${packageName}", "${debPkgName}/usr/bin/${packageInfo["Package"]}");
+    mkdir("./jvbuild-out");
+    mv(EXE_FILE_PATH, "./jvbuild-out/${packageName}");
+    cp("./jvbuild-out/${packageName}", "${debPkgName}/usr/bin/${packageInfo["Package"]}");
     fwrite("${debPkgName}/DEBIAN/control", controlContents);
     if (buildDef.icon != null) {
         fwrite("${debPkgName}/usr/share/applications/${packageName}.desktop", desktopContents);
@@ -234,8 +234,8 @@ exit 0""";
     final buildRes = Process.runSync("dpkg-deb", ["--build", debPkgName]);
     printOutAndErrIfExist(buildRes);
 
-    // move package to .jvbuild-out and cleanup
-    mv("./${debPkgName}.deb", "./.jvbuild-out/${debPkgName}_${packageInfo["Architecture"]}.deb");
+    // move package to jvbuild-out and cleanup
+    mv("./${debPkgName}.deb", "./jvbuild-out/${debPkgName}_${packageInfo["Architecture"]}.deb");
     rm(debPkgName);
 
     print("Build Complete!");

@@ -1,5 +1,7 @@
 import 'dart:io';
+
 import 'package:json5/json5.dart';
+
 import './JVModule.dart';
 import './utils.dart';
 
@@ -106,6 +108,7 @@ JVModule? parseModule(Map<String, dynamic> moduleJSON, BuildDefinition buildDef)
         install: install,
         dependencies: dependencies,
         devDependencies: devDependencies,
+        buildFilePath: buildDef.filePath
     );
 }
 
@@ -151,6 +154,7 @@ class BuildDefinition {
     Map<String, String> run = {};
 
     String filePath = "";
+    List<String> remoteImportLinks = [];
 
     BuildDefinition({
         required this.name,
@@ -180,7 +184,7 @@ class BuildDefinition {
         if (mimeType != null) this.mimeType = mimeType;
     }
 
-    static BuildDefinition? parseBuildFile(String filePath, bool isEntrypoint) {
+    static Future<BuildDefinition?> parseBuildFile(String filePath, bool isEntrypoint) async {
         final file = File(filePath);
         
         if (file.existsSync()) {
@@ -259,6 +263,10 @@ class BuildDefinition {
                 final mimeType = assertArr<String>(buildSpec["mimeType"]) ? castArr<String>(buildSpec["mimeType"]) : null;
                 final icon = assertType<String?>(buildSpec["icon"]);
 
+                if (defaultModule != null) {
+                    buildModes[defaultModule] = [defaultModule];
+                }
+
                 buildDef = BuildDefinition(
                     name: name,
                     description: description,
@@ -310,12 +318,15 @@ class BuildDefinition {
                         }
                         buildDefDirPath = buildDefDirPath.substring(0, backWalk + 1);
 
-                        if (local != null) {
+                        var localModDirExists = false;
+                        if (local is String) {
                             final localBuildPath = "${buildDefDirPath + local}/build.json5";
                             final localBuildFile = File(localBuildPath);
                             if (localBuildFile.existsSync()) {
+                                localModDirExists = true;
+
                                 // import sub modules
-                                final res = parseBuildFile(localBuildPath, false);
+                                final res = await parseBuildFile(localBuildPath, false);
                                 if (res != null) {
                                     for (final moduleName in res.modules.keys) {
                                         if (!buildDef.modules.containsKey(moduleName)) {
@@ -324,8 +335,34 @@ class BuildDefinition {
                                     }
                                 }
                             }
-                        } else if (remote != null) {
-                            // TODO: implement
+                        }
+                        
+                        if (!localModDirExists && remote is String) {
+                            final downloadName = "download-" + remote
+                                .replaceFirst("https://", "")
+                                .replaceFirst("http://", "")
+                                .replaceAll("/", "_");
+                            final unzipPath = "./jvbuild-cache/${downloadName}";
+                            
+                            var unzipDir = Directory(unzipPath);
+                            if (unzipDir.existsSync()) {
+                                var modBuildFile = await getCachedBuildFile(unzipPath);
+                                if (modBuildFile != null) {
+                                    // import cached remote modules
+                                    final res = await parseBuildFile(modBuildFile.absolute.path, false);
+                                    if (res != null) {
+                                        for (final moduleName in res.modules.keys) {
+                                            // print("AAA");
+                                            // print(moduleName);
+                                            if (!buildDef.modules.containsKey(moduleName)) {
+                                                buildDef.modules[moduleName] = res.modules[moduleName]!;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            buildDef.remoteImportLinks.add(remote);
                         }
                     }
                 }

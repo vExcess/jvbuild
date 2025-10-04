@@ -1,6 +1,30 @@
 import 'dart:io';
 import 'dart:math' as Math;
 
+Future<File?> getCachedBuildFile(String unzipPath) async {
+    var modBuildFile = File("${unzipPath}/build.json5");
+    var unzipDir = Directory(unzipPath);
+    
+    // build file might be nested 1 layer in
+    if (!modBuildFile.existsSync()) {
+        final dirItems = unzipDir.listSync();
+        for (final item in dirItems) {
+            final itemType = await FileSystemEntity.type(item.absolute.path);
+            if (itemType.toString() == 'directory') {
+                modBuildFile = new File("${item.absolute.path}/build.json5");
+                if (modBuildFile.existsSync()) {
+                    break;
+                }
+            }
+        }
+    }
+
+    if (modBuildFile.existsSync()) {
+        return modBuildFile;
+    }
+    return null;
+}
+
 void printOutAndErrIfExist(ProcessResult procRes) {
     final stdOut = procRes.stdout.toString().trimRight();
     if (stdOut.trimLeft().isNotEmpty) {

@@ -6,17 +6,23 @@
     
     modules: {
         jvbuild: {
-            version: "1.1.0",
+            version: "1.2.0",
             root: "src/jvbuild.dart",
             dependencies: [
                 "json5",
                 "image",
+                "http"
             ]
         },
 
         json5: {
             type: "dart:lib",
             version: "^0.8.2"
+        },
+
+        http: {
+            type: "dart:lib",
+            version: "^1.5.0"
         },
 
         image: {

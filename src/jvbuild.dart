@@ -1,5 +1,8 @@
 import 'dart:io';
 
+import 'package:http/http.dart' as http;
+import 'package:json5/json5.dart';
+
 import './utils.dart';
 
 import './BuildDefinition.dart';
@@ -52,6 +55,7 @@ commands:
   run        run a script or module
   translate  translate build.json5 to [build.zig, package.json, pubspec.yaml]
   package    package a module for distribution
+  install    download remote dependencies
 
 flags:
   -O, --Optimize  Set optimization level [debug, small, fast, safe]. Debug is the default
@@ -67,7 +71,7 @@ examples:
   jvbuild run myBuildMode -O=Fast
 """;
 
-void main(List<String> arguments) async {
+Future<void> jvbuild(List<String> arguments) async {
     var filePath = "build.json5";
     var outputPath = "";
     var optimizationLevel = "default";
@@ -99,7 +103,7 @@ void main(List<String> arguments) async {
             if (argVal.length == 2) {
                 filePath = argVal[1];
             } else {
-                print("jvbuild: invalid option argument");
+                print("jvbuild: invalid option argument: ${arg}");
                 return;
             }
         } 
@@ -114,7 +118,7 @@ void main(List<String> arguments) async {
             if (argVal.length == 2) {
                 outputPath = argVal[1];
             } else {
-                print("jvbuild: invalid option argument");
+                print("jvbuild: invalid option argument: ${arg}");
                 return;
             }
             hasOutputPath = true;
@@ -135,7 +139,7 @@ void main(List<String> arguments) async {
                     return;
                 }
             } else {
-                print("jvbuild: invalid option argument");
+                print("jvbuild: invalid option argument: ${arg}");
                 return;
             }
             hasOptimizationLevel = true;
@@ -160,6 +164,11 @@ void main(List<String> arguments) async {
         else if (arg == "package") {
             command = "package";
         } 
+
+        // install    download remote dependencies
+        else if (arg == "install") {
+            command = "install";
+        } 
         
         // catch extra arguments
         else {
@@ -183,7 +192,7 @@ void main(List<String> arguments) async {
     if (isVerbose) {
         print("Parsing ${filePath}");
     }
-    final parsedFile = BuildDefinition.parseBuildFile(filePath, true);
+    final parsedFile = await BuildDefinition.parseBuildFile(filePath, true);
     if (parsedFile != null) {
         // for (var i = 0; i < parsedFile.modules.length; i++) {
         //     final mod = parsedFile.modules[i];
@@ -205,9 +214,13 @@ void main(List<String> arguments) async {
             buildDef: parsedFile
         );
 
-        var outDir = Directory("./.jvbuild-out");
-        if (!outDir.existsSync()) {
+        var outDir = Directory("./jvbuild-out");
+        if (!outDir.existsSync() && ["package", "build"].contains(command)) {
             outDir.createSync();
+        }
+
+        if (isVerbose) {
+            print(parsedFile);
         }
 
         switch (command) {
@@ -281,9 +294,123 @@ void main(List<String> arguments) async {
                 }
             
 
-            // case "translate":
-            //     print(gen_build_zig(parsedFile, buildMode, optimizationLevel));
+            case "translate":
+                final translateModules = parsedFile.build[selector];
+                final translateModule = parsedFile.modules[selector];
 
+                if (translateModules != null) {
+                    for (final moduleName in translateModules) {
+                        final module = parsedFile.modules[moduleName]!;
+                        final langPlugin = getLangPlugin(module);
+                        if (langPlugin == null) return;
+
+                        final translated = langPlugin.translate(module, cmdArgs);
+                        if (translated == null) {
+                            return;
+                        }
+                        if (outputPath.isNotEmpty) {
+                            File(outputPath).writeAsStringSync(translated);
+                        } else {
+                            print(translated);
+                        }
+                    }
+                } else if (translateModule != null) {
+                    final langPlugin = getLangPlugin(translateModule);
+                    if (langPlugin == null) return;
+                    
+                    final translated = langPlugin.translate(translateModule, cmdArgs);
+                    if (translated == null) {
+                        return;
+                    }
+                    if (outputPath.isNotEmpty) {
+                        File(outputPath).writeAsStringSync(translated);
+                    } else {
+                        print(translated);
+                    }
+                } else {
+                    makeSuggestions(parsedFile.build, selector);
+                    return;
+                }
+
+            case "install":
+                Future<void> downloadRemote(String repoURL) async {
+                    if (repoURL[repoURL.length - 1] == "/") {
+                        repoURL = repoURL.substring(0, repoURL.length - 1);
+                    }
+                    
+                    var outDir = Directory("./jvbuild-cache");
+                    if (!outDir.existsSync()) {
+                        outDir.createSync();
+                    }
+
+                    final downloadName = "download-" + repoURL
+                        .replaceFirst("https://", "")
+                        .replaceFirst("http://", "")
+                        .replaceAll("/", "_");
+                    final zipPath = "./jvbuild-cache/${downloadName}.zip";
+                    final unzipPath = "./jvbuild-cache/${downloadName}";
+
+                    var unzipDir = Directory(unzipPath);
+
+                    // download, unzip, and verify remote
+                    if (!unzipDir.existsSync()) {
+                        print("Downloading ${repoURL} ...");
+
+                        final response = await http.get(Uri.parse("${repoURL}/archive/refs/heads/main.zip"));
+                        
+                        var zipFile = File(zipPath);
+                        zipFile.writeAsBytesSync(response.bodyBytes);
+
+                        Process.runSync("unzip", [zipPath, "-d", unzipPath]);
+
+                        zipFile.deleteSync();
+
+                        var modBuildFile = await getCachedBuildFile(unzipPath);
+
+                        if (modBuildFile == null) {
+                            print("jbuild: failed to download build.json5 file from ${repoURL}");
+                            return null;
+                        } else {
+                            final contents = modBuildFile.readAsStringSync();
+                            try {
+                                JSON5.parse(contents);
+                            } catch (e) {
+                                print("jvbuild: invalid json5 file\n\t${e}\n${contents}");
+                                return null;
+                            }
+                        }
+                    } else {
+                        print("${repoURL} is already installed.");
+                    }
+                    
+                    // parse remote's build file
+                    var modBuildFile = await getCachedBuildFile(unzipPath);
+                    if (modBuildFile != null && modBuildFile.existsSync()) {
+                        // import sub modules
+                        final res = await BuildDefinition.parseBuildFile(modBuildFile.absolute.path, false);
+                        if (res != null) {
+                            for (String remote in res.remoteImportLinks) {
+                                downloadRemote(remote);
+                            }
+                            // for (final moduleName in res.modules.keys) {
+                            //     if (!parsedFile.modules.containsKey(moduleName)) {
+                            //         parsedFile.modules[moduleName] = res.modules[moduleName]!;
+                            //     }
+                            // }
+                        }
+                    }
+                }
+
+                print("IMPORTING ${parsedFile.remoteImportLinks}");
+                for (String remote in parsedFile.remoteImportLinks) {
+                    await downloadRemote(remote);
+                }
+
+                print("Dependencies installed!");
         }
     }
+}
+
+void main(List<String> arguments) async {
+    await jvbuild(arguments);
 }

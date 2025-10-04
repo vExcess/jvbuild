@@ -26,7 +26,7 @@ class LangPlugin {
         throw "LangPlugin.run must be implemented by child";
     }
 
-    String translate(JVModule module, CommandArgs args) {
+    String? translate(JVModule module, CommandArgs args) {
         throw "LangPlugin.translate must be implemented by child";
     }
 }

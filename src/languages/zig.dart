@@ -101,7 +101,7 @@ class ZigPlugin extends LangPlugin {
             callArgs.add("-lc");
         }
 
-        final finalOutputPath = (args.outputPath.length > 0) ? args.outputPath : "./.jvbuild-out/${exeName}${entryIsLib ? ".so" : ""}";
+        final finalOutputPath = (args.outputPath.length > 0) ? args.outputPath : "./jvbuild-out/${exeName}${entryIsLib ? ".so" : ""}";
         if (command == "build") {
             callArgs.add("--cache-dir");
             callArgs.add("./.zig-cache");
@@ -131,7 +131,7 @@ class ZigPlugin extends LangPlugin {
         await build_run("run", module, args);
     }
 
-    String translate(JVModule module, CommandArgs args) {
+    String? translate(JVModule module, CommandArgs args) {
         final jvmods = args.buildDef.modules.values.toList();
 
         var out = """

@@ -14,6 +14,8 @@ class JVModule {
     List<String> dependencies = [];
     List<String> devDependencies = [];
 
+    String buildFilePath;
+
     JVModule({
         String? name,
         required this.language,
@@ -23,6 +25,7 @@ class JVModule {
         Map<String, String>? install,
         List<String>? dependencies,
         List<String>? devDependencies,
+        required this.buildFilePath,
     }) {
         if (name != null) this.name = name;
         if (version != null) this.version = version;
