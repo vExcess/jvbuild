@@ -1,9 +1,8 @@
-dist/jvbuild
+jvbuild-out/jvbuild
 
 build
 .dart_tool/
 pubspec.lock
-pubspec.yaml
 
 # Dependency directories
 node_modules/

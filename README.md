@@ -3,7 +3,7 @@
 
 NOTE: I would consider jvbuild a beta software. Do not expect it to be stable or complete.
 
-## Currently Support Languages
+## Currently Supported Languages
 - Zig
 - Dart
 
@@ -19,7 +19,11 @@ See [https://github.com/librepaint/librepaint-3d](https://github.com/librepaint/
 See [docs.md](https://github.com/vExcess/jvbuild/blob/main/docs.md) for usage and documentation
 
 ## Building
-jvbuild is self hosted! First use `dart run` to run jvbuild's `build` command on itself. This compiles jvbuild and outputs it to the `jvbuild-out` directory.
+Before jvbuild can bootstrap itself, you must install its dependencies.
+```bash
+dart pub get
+```
+Next run jvbuild from source to build itself. jvbuild is selfhosted!
 ```bash
 dart run src/jvbuild.dart build
 ```
@@ -27,3 +31,20 @@ Next use the compiled jvbuild binary to package itself for distribution
 ```bash
 ./jvbuild-out/jvbuild package
 ```
+Congrats, you have used jvbuild to build and package itself!
+
+## Platform Support
+X = Not Supported  
+P = Support Planned  
+Y = Supported  
+? = Maybe  
+\- = Does Not Exist  
+
+| Platform  | x64 | Arm64 | RISC-V |
+| ------------- | ------------- | ------------- | ------------- |
+| Windows 10/11      | P | X | - |
+| macOS              | X | X | - |
+| Debian-based Linux | Y | Y | P |
+| Fedora-based Linux | P | P | P |
+| Arch-based Linux   | P | P | P |
+| Other Linux        | ? | ? | ? |
