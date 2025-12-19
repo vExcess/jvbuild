@@ -265,12 +265,29 @@ Future<void> jvbuild(List<String> arguments) async {
                 }
 
             case "build":
-                final buildModules = parsedFile.build[selector];
+                final buildModuleNames = parsedFile.build[selector];
                 final buildModule = parsedFile.modules[selector];
 
-                if (buildModules != null) {
-                    for (final moduleName in buildModules) {
-                        final module = parsedFile.modules[moduleName]!;
+                if (buildModuleNames != null) {
+                    for (final moduleName in buildModuleNames) {
+                        final module = parsedFile.modules[moduleName];
+
+                        if (module == null) {
+                            print("jvbuild: module `${moduleName}` does not exist");
+                            var maxSim = 0.0;
+                            var maxSimBuildMode = "";
+                            for (var j = 0; j < parsedFile.modules.length; j++) {
+                                final jvmodName = parsedFile.modules[j]!.name;
+                                final sim = LevDist(moduleName, jvmodName);
+                                if (sim > maxSim) {
+                                    maxSim = sim;
+                                    maxSimBuildMode = jvmodName;
+                                }
+                            }
+                            print("did you mean `${maxSimBuildMode}`?");
+                            return;
+                        }
+
                         final langPlugin = getLangPlugin(module);
                         if (langPlugin == null) return;
 

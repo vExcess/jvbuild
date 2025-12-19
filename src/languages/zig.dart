@@ -2,35 +2,47 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:path/path.dart' as path;
 
+import '../BuildDefinition.dart';
 import '../JVModule.dart';
 import './LangPlugin.dart';
 import '../utils.dart';
 
 class ZigPlugin extends LangPlugin {
-    Future<void> build_run(String command, JVModule module, CommandArgs args) async {
-        List<String> callArgs = [command == "run" ? "run" : "build-exe", "-D_REENTRANT"];
-        final jvmods = args.buildDef.modules.values.toList();
-        final buildEntryNames = args.buildDef.build[args.selector] as List<String>;
+    bool recursiveDependsOn(JVModule module, String targetDepName, BuildDefinition buildDef) {
+        if (module.dependencies.contains(targetDepName)) {
+            return true;
+        }
 
-        // verify that modules exist
-        for (var i = 0; i < buildEntryNames.length; i++) {
-            final modName = buildEntryNames[i];
-            final mod = findOne(jvmods, (mod) => mod.name == modName);
-            if (mod == null) {
-                print("jvbuild: module `${modName}` does not exist");
-                var maxSim = 0.0;
-                var maxSimBuildMode = "";
-                for (var j = 0; j < jvmods.length; j++) {
-                    final jvmodName = jvmods[j].name;
-                    final sim = LevDist(modName, jvmodName);
-                    if (sim > maxSim) {
-                        maxSim = sim;
-                        maxSimBuildMode = jvmodName;
-                    }
-                }
-                print("did you mean `${maxSimBuildMode}`?");
-                return;
+        var dependsOn = false;
+        for (final depName in module.dependencies) {
+            final dep = buildDef.modules[depName];
+            if (recursiveDependsOn(dep!, targetDepName, buildDef)) {
+                dependsOn = true;
             }
+        }
+        return dependsOn;
+    }
+
+    List<String> getRecursiveDependencies(JVModule module, BuildDefinition buildDef, [Set<String>? aggregator]) {
+        if (aggregator == null) {
+            aggregator = new Set();
+        }
+
+        for (final depName in module.dependencies) {
+            aggregator.add(depName);
+            final dep = buildDef.modules[depName];
+            getRecursiveDependencies(dep!, buildDef, aggregator);
+        }
+
+        return aggregator.toList();
+    }
+
+    Future<void> build_run(String command, JVModule module, CommandArgs args) async {
+        List<String> callArgs = [(command == "run" ? "run" : "build-exe"), "-D_REENTRANT"];
+        final jvmods = args.buildDef.modules.values.toList();
+        List<String> buildEntryNames = [];
+        if (args.buildDef.build[args.selector] != null) {
+            buildEntryNames = args.buildDef.build[args.selector] as List<String>;
         }
 
         if (args.isVerbose) {
@@ -39,60 +51,66 @@ class ZigPlugin extends LangPlugin {
             print("modules: ${jvmods.toString()}");
         }
 
-        final buildEntryName = buildEntryNames[0];
-
-        var linkLibC = false;
-        var exeName = "";
-        var entryIsLib = false;
-        for (var i = 0; i < jvmods.length; i++) {
-            final mod = jvmods[i];
-
-            if (mod.modType == ModuleType.LIB) {
-                for (var j = 0; j < mod.dependencies.length; j++) {
-                    callArgs.add("--dep");
-                    callArgs.add("${mod.dependencies[j]}");
-                }
-                callArgs.add("-M${mod.name}=${mod.root}");
-            }
+        // verify dependencies exist and include/link system libraries
+        var encounteredErr = false;
+        final allDepNames = getRecursiveDependencies(module, args.buildDef);
+        for (final depName in allDepNames) {
+            final dep = args.buildDef.modules[depName];
             
-            if (mod.name == buildEntryName) {
-                for (var j = 0; j < mod.dependencies.length; j++) {
-                    final depName = mod.dependencies[j];
-                    if (args.buildDef.modules[depName]!.language == "system"){
-                        callArgs.add("-I/usr/include/${depName}");
-                        callArgs.add("-l${depName}");
-                    } else {
-                        callArgs.add("--dep");
-                        callArgs.add("${depName}");    
-                    }
-                }
-
-                if (mod.dependencies.contains("libc")) {
-                    linkLibC = true;
-                }
-                
-                exeName = mod.name;
-                entryIsLib = mod.modType == ModuleType.LIB;
-                if (!entryIsLib) {
-                    callArgs.add("-Mroot=${mod.root}");
-                }
+            if (dep == null) {
+                print("jvbuild: unable to locate dependency: ${depName}");
+                encounteredErr = true;
+                continue;
             }
 
-            switch (args.optimizationLevel) {
-                case "default":
-                    callArgs.add("-ODebug");
-                case "debug":
-                    callArgs.add("-ODebug");
-                case "small":
-                    callArgs.add("-OReleaseSmall");
-                case "fast":
-                    callArgs.add("-OReleaseFast");
-                case "safe":
-                    callArgs.add("-OReleaseSafe");
+            if (dep.name != "libc" && dep.language == "system") {
+                callArgs.add("-I/usr/include/${depName}");
+                callArgs.add("-l${depName}");
             }
         }
 
-        if (entryIsLib && callArgs[0] == "build-exe") {
+        // return error value on failure
+        if (encounteredErr) {
+            print("try fetching dependencies using `jvbuild install` and making sure it's imported in your build.json5");
+            return null;
+        }
+
+        final isLib = module.modType == ModuleType.LIB;
+        final linkLibC = recursiveDependsOn(module, "libc", args.buildDef);
+        final exeName = module.name;
+
+        for (final mod in jvmods) {
+            if (mod.language == "zig" && (mod.name == exeName || allDepNames.contains(mod.name))) {
+                for (final depName in mod.dependencies) {
+                    final dep = args.buildDef.modules[depName]!;
+                    if (dep.language == "zig") {
+                        callArgs.add("--dep");
+                        callArgs.add("${depName}");
+                    }
+                }
+
+                switch (args.optimizationLevel) {
+                    case "default":
+                        callArgs.add("-ODebug");
+                    case "debug":
+                        callArgs.add("-ODebug");
+                    case "small":
+                        callArgs.add("-OReleaseSmall");
+                    case "fast":
+                        callArgs.add("-OReleaseFast");
+                    case "safe":
+                        callArgs.add("-OReleaseSafe");
+                }
+
+                if (mod.name == exeName && !isLib) {
+                    callArgs.add("-Mroot=${module.root}");
+                } else {
+                    callArgs.add("-M${mod.name}=${mod.root}");
+                }
+            }
+        }
+
+        if (isLib && callArgs[0] == "build-exe") {
             callArgs[0] = "build-lib";
             callArgs.add("-dynamic");
         }
@@ -100,8 +118,9 @@ class ZigPlugin extends LangPlugin {
         if (linkLibC) {
             callArgs.add("-lc");
         }
+        
+        final finalOutputPath = (args.outputPath.length > 0) ? args.outputPath : ("./jvbuild-out/${exeName}${isLib ? ".so" : ""}");
 
-        final finalOutputPath = (args.outputPath.length > 0) ? args.outputPath : "./jvbuild-out/${exeName}${entryIsLib ? ".so" : ""}";
         if (command == "build") {
             callArgs.add("--cache-dir");
             callArgs.add("./.zig-cache");
@@ -176,7 +195,7 @@ pub fn build(b: *std.Build) void {
         .name = "${mod.name}",
         .root_source_file = b.path(${rootStr}),
         .target = target,
-        .optimize = optimize${mod.dependencies.contains("libc") ? ",\n        .link_libc = true" : ""}
+        .optimize = optimize${recursiveDependsOn(mod, "libc", args.buildDef) ? ",\n        .link_libc = true" : ""}
     });\n\n""";
             }
         }
