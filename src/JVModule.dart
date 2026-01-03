@@ -10,6 +10,8 @@ class JVModule {
     ModuleType modType = ModuleType.UNRESOLVED;
     String version = "0.0.0";
     String root = "";
+    String include = "";
+    String lib_path = "";
     Map<String, String> install = {};
     List<String> dependencies = [];
     List<String> devDependencies = [];
@@ -22,6 +24,8 @@ class JVModule {
         required this.modType,
         String? version,
         String? root,
+        String? include,
+        String? lib_path,
         Map<String, String>? install,
         List<String>? dependencies,
         List<String>? devDependencies,
@@ -30,6 +34,8 @@ class JVModule {
         if (name != null) this.name = name;
         if (version != null) this.version = version;
         if (root != null) this.root = root;
+        if (include != null) this.include = include;
+        if (lib_path != null) this.lib_path = lib_path;
         if (install != null) this.install = install;
         if (dependencies != null) this.dependencies = dependencies;
         if (devDependencies != null) this.devDependencies = devDependencies;
@@ -77,6 +83,8 @@ class JVModule {
     modType: ${modType},
     version: ${version},
     root: ${root},
+    include: ${include},
+    lib_path: ${lib_path},
     install: ${install},
     dependencies: ${dependencies},
     devDependencies: ${devDependencies},

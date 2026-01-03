@@ -1,7 +1,7 @@
 # jvbuild
-**J**SON5 **v**ersioned **build** system. jvbuild is a language-agnostic package manager, build system, and distribution tool.
+**J**SON **V**(5) **build** system. jvbuild is a language-agnostic package manager, build system, and distribution tool.
 
-NOTE: I would consider jvbuild a beta software. Do not expect it to be stable or complete.
+NOTE: I would consider jvbuild a beta software. Do not expect it to be stable or complete. However, it is developed enough that I use it or multiple projects.
 
 ## Currently Supported Languages
 - Zig
@@ -32,6 +32,9 @@ Next use the compiled jvbuild binary to package itself for distribution
 ./jvbuild-out/jvbuild package
 ```
 Congrats, you have used jvbuild to build and package itself!
+
+## Binary Releases
+In the case that you're too lazy to build from source you can download the binaries from the `jvbuild-out` directory in this repo. The amd64 deb will always be up to date, but other targets may be outdated.
 
 ## Platform Support
 X = Not Supported  

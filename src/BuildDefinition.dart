@@ -61,6 +61,8 @@ JVModule? parseModule(Map<String, dynamic> moduleJSON, BuildDefinition buildDef)
     }
     
     var root = assertType<String?>(moduleJSON["root"]);
+    var include = assertType<String?>(moduleJSON["include"]);
+    var lib_path = assertType<String?>(moduleJSON["lib_path"]);
     var modTypeString = assertType<String?>(moduleJSON["type"]);
     List<String> typeParts = [];
 
@@ -96,6 +98,12 @@ JVModule? parseModule(Map<String, dynamic> moduleJSON, BuildDefinition buildDef)
     if (root != null) {
         root = Uri.file(buildDef.filePath).resolve(root).toString().substring("file://".length);
     }
+    if (include != null) {
+        include = Uri.file(buildDef.filePath).resolve(include).toString().substring("file://".length);
+    }
+    if (lib_path != null) {
+        lib_path = Uri.file(buildDef.filePath).resolve(lib_path).toString().substring("file://".length);
+    }
 
     final version = assertType<String?>(moduleJSON["version"]);
 
@@ -105,6 +113,8 @@ JVModule? parseModule(Map<String, dynamic> moduleJSON, BuildDefinition buildDef)
         modType: modType,
         version: version,
         root: root,
+        include: include,
+        lib_path: lib_path,
         install: install,
         dependencies: dependencies,
         devDependencies: devDependencies,

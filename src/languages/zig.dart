@@ -31,7 +31,9 @@ class ZigPlugin extends LangPlugin {
         for (final depName in module.dependencies) {
             aggregator.add(depName);
             final dep = buildDef.modules[depName];
-            getRecursiveDependencies(dep!, buildDef, aggregator);
+            if (dep != null) {
+                getRecursiveDependencies(dep, buildDef, aggregator);
+            }
         }
 
         return aggregator.toList();
@@ -64,7 +66,16 @@ class ZigPlugin extends LangPlugin {
             }
 
             if (dep.name != "libc" && dep.language == "system") {
-                callArgs.add("-I/usr/include/${depName}");
+                if (dep.include.isNotEmpty) {
+                    callArgs.add("-I${dep.include}");
+                } else {
+                    callArgs.add("-I/usr/include/${depName}");
+                }
+
+                if (dep.lib_path.isNotEmpty) {
+                    callArgs.add("-L${dep.lib_path}");
+                }
+                
                 callArgs.add("-l${depName}");
             }
         }

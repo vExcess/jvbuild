@@ -63,13 +63,19 @@ String containing a command to run.
 If the module is NOT being declared in the global `modules` field, then a name is required.
 
 `type` optional :: String  
-Module language followed by a colon and either "exe" (for executables) or "lib" (for libraries). ex: `dart:exe` or `zig:lib`. If excluded defaults to exe and the language of the file in the `root` field.
+Module language followed by a colon and either "exe" (for executables) or "lib" (for libraries). ex: `dart:exe` or `zig:lib`. If excluded defaults to exe and the language of the file in the `root` field. For dynamic libraries use `system:lib`.
 
 `version` optional :: String  
 Project version in `0.0.0` format. Use `^0.0.0` to define a minimum version requirement.
 
 `root` optional* :: String  
 Path to module's entrypoint. This field is not required only if the module is a language or system package. ex: `src/main.zig`
+
+`include` optional* :: String  
+Path to header files for system packages. This is not required if the header file is in your OS's default directory.
+
+`lib` optional* :: String  
+Path to the dynamic library (.dll/.so) files for system packages. This is not required if the dynamic library is in your OS's default directory.
 
 `install` optional* :: Map<OSNames, String>  
 Install scripts required if the module is a system package. Each OS will have its own install script. OSes sharing an install script can be joined with an underscore. ex:
