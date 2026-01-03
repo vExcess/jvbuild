@@ -47,24 +47,27 @@ LangPlugin? getLangPlugin(JVModule module) {
     return langPlug;
 }
 
-const helpDialog = """jvbuild [buildMode] [options]
-jvbuild [command] [buildMode] [flags]
+const helpDialog = """jvbuild v1.5.0 <https://github.com/vExcess/jvbuild>
 
-commands:
+Usage:
+    jvbuild [buildMode] [options]
+    jvbuild [command] [buildMode] [flags]
+
+Commands:
   build      build modules without running them
   run        run a script or module
   translate  translate build.json5 to [build.zig, package.json, pubspec.yaml]
   package    package a module for distribution
   install    download remote dependencies
 
-flags:
+Flags:
   -O, --Optimize  Set optimization level [debug, small, fast, safe]. Debug is the default
   -o, --output    Set output file
   -h, --help      Display help dialog
   -p, --path      Path to build.json5 (defaults to ./build.json5)
   -v, --verbose   Print module tree and compiler commands
 
-examples:
+Examples:
   jvbuild build
   jvbuild translate --output=build.zig
   jvbuild run -p=myBuildFile.json5

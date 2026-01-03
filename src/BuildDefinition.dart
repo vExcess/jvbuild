@@ -330,7 +330,19 @@ class BuildDefinition {
 
                         var localModDirExists = false;
                         if (local is String) {
-                            final localBuildPath = "${buildDefDirPath + local}/build.json5";
+                            String localBuildPath;
+                            if (local.startsWith("/")) {
+                                localBuildPath = local;
+                            } else {
+                                localBuildPath = buildDefDirPath + local;
+                            }
+                            if (localBuildPath.endsWith("/")) {
+                                localBuildPath = localBuildPath.substring(0, localBuildPath.length - 1);
+                            }
+                            if (!localBuildPath.endsWith("build.json5")) {
+                                localBuildPath = localBuildPath + "/build.json5";
+                            }
+
                             final localBuildFile = File(localBuildPath);
                             if (localBuildFile.existsSync()) {
                                 localModDirExists = true;
