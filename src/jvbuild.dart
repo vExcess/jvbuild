@@ -47,7 +47,7 @@ LangPlugin? getLangPlugin(JVModule module) {
     return langPlug;
 }
 
-const helpDialog = """jvbuild v1.5.0 <https://github.com/vExcess/jvbuild>
+const helpDialog = """jvbuild v1.6.0 <https://github.com/vExcess/jvbuild>
 
 Usage:
     jvbuild [buildMode] [options]
@@ -329,7 +329,12 @@ Future<void> jvbuild(List<String> arguments) async {
                             return;
                         }
                         if (outputPath.isNotEmpty) {
-                            File(outputPath).writeAsStringSync(translated);
+                            try {
+                                File(outputPath).writeAsStringSync(translated);
+                            } on FileSystemException catch (e) {
+                                print("jbuild: failed to write to ${outputPath} . Make sure your module type and root are set correctly.");
+                                return;
+                            }
                         } else {
                             print(translated);
                         }
@@ -343,7 +348,12 @@ Future<void> jvbuild(List<String> arguments) async {
                         return;
                     }
                     if (outputPath.isNotEmpty) {
-                        File(outputPath).writeAsStringSync(translated);
+                        try {
+                            File(outputPath).writeAsStringSync(translated);
+                        } on FileSystemException catch (e) {
+                            print("jbuild: failed to write to ${outputPath} . Make sure your module type and root are set correctly.");
+                            return;
+                        }
                     } else {
                         print(translated);
                     }
