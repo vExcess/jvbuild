@@ -13,7 +13,7 @@ NOTE: I would consider jvbuild a beta software. Do not expect it to be stable or
 - Windows (.msi) [Not Yet Implemented]
 
 ## Example
-See [https://github.com/librepaint/librepaint-3d](https://github.com/librepaint/librepaint-3d) for an example of a full project using jvbuild.
+See [https://github.com/microslop-mirror/librepaint-3d](https://github.com/microslop-mirror/librepaint-3d) for an example of a full project using jvbuild.
 
 ## Docs
 See [docs.md](https://github.com/vExcess/jvbuild/blob/main/docs.md) for usage and documentation
