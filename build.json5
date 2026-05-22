@@ -3,15 +3,20 @@
     description: "JSON5-based and language-agnostic package manager, build system, and distribution tool.",
     author: "VExcess <github.com/vexcess>",
     repository: "https://github.com/vExcess/jvbuild",
+    license: "MIT",
     
     modules: {
         jvbuild: {
-            version: "1.6.0",
+            version: "1.7.0",
             root: "src/jvbuild.dart",
             dependencies: [
                 "json5",
                 "image",
                 "http"
+            ],
+            weak_dependencies: [
+                "dpkg",
+                // ""
             ]
         },
 
@@ -29,6 +34,15 @@
             type: "dart:lib",
             version: "^4.5.4"
         },
+
+        dpkg: {
+            type: "system:lib",
+            install: {
+                debian_ubuntu: "sudo apt-get install dpkg",
+                fedora: "sudo dnf install dpkg"
+            }
+        },
+
     },
 
     default: "jvbuild"

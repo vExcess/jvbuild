@@ -93,6 +93,9 @@ The list of dependencies for the module. Dependencies can be a string containing
 `dev_dependencies` optional :: Array<String | ModuleDefinition>  
 Same as dependencies, but these ones are only needed for development and not distribution.
 
+`weak_dependencies` optional :: Array<String | ModuleDefinition>  
+Same as dependencies, but these ones are not necessary for the core functioning of the program. Weak dependencies will not be installed by jvbuild. They act as a hint to inform the user of additional packages they can install to get additional functionality. For example a paint program supporting extra image formats.
+
 ## Module Imports
 `$importAll` :: Array<ImportDefinition>
 List of imports

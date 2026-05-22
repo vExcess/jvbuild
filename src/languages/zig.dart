@@ -4,8 +4,8 @@ import 'package:path/path.dart' as path;
 
 import '../BuildDefinition.dart';
 import '../JVModule.dart';
+import '../CommandArgs.dart';
 import './LangPlugin.dart';
-import '../utils.dart';
 
 class ZigPlugin extends LangPlugin {
     bool recursiveDependsOn(JVModule module, String targetDepName, BuildDefinition buildDef) {

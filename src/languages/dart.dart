@@ -4,6 +4,7 @@ import '../jvbuild.dart';
 import '../JVModule.dart';
 import '../utils.dart';
 import './LangPlugin.dart';
+import '../CommandArgs.dart';
 
 class DartPlugin extends LangPlugin {
     // return true on success

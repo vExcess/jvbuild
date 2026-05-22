@@ -7,6 +7,7 @@ import './utils.dart';
 
 import './BuildDefinition.dart';
 import './JVModule.dart';
+import './CommandArgs.dart';
 
 import './packager.dart';
 
@@ -47,7 +48,7 @@ LangPlugin? getLangPlugin(JVModule module) {
     return langPlug;
 }
 
-const helpDialog = """jvbuild v1.6.0 <https://github.com/vExcess/jvbuild>
+const helpDialog = """jvbuild v1.7.0 <https://github.com/vExcess/jvbuild>
 
 Usage:
     jvbuild [buildMode] [options]

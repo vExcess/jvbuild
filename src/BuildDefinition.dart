@@ -94,6 +94,7 @@ JVModule? parseModule(Map<String, dynamic> moduleJSON, BuildDefinition buildDef)
     }
     final dependencies = parseDependencies(moduleJSON["dependencies"], buildDef);
     final devDependencies = parseDependencies(moduleJSON["dev_dependencies"], buildDef);
+    final weakDependencies = parseDependencies(moduleJSON["weak_dependencies"], buildDef);
 
     if (root != null) {
         root = Uri.file(buildDef.filePath).resolve(root).toString().substring("file://".length);
@@ -118,6 +119,7 @@ JVModule? parseModule(Map<String, dynamic> moduleJSON, BuildDefinition buildDef)
         install: install,
         dependencies: dependencies,
         devDependencies: devDependencies,
+        weakDependencies: weakDependencies,
         buildFilePath: buildDef.filePath
     );
 }

@@ -15,6 +15,7 @@ class JVModule {
     Map<String, String> install = {};
     List<String> dependencies = [];
     List<String> devDependencies = [];
+    List<String> weakDependencies = [];
 
     String buildFilePath;
 
@@ -29,6 +30,7 @@ class JVModule {
         Map<String, String>? install,
         List<String>? dependencies,
         List<String>? devDependencies,
+        List<String>? weakDependencies,
         required this.buildFilePath,
     }) {
         if (name != null) this.name = name;
@@ -39,6 +41,7 @@ class JVModule {
         if (install != null) this.install = install;
         if (dependencies != null) this.dependencies = dependencies;
         if (devDependencies != null) this.devDependencies = devDependencies;
+        if (weakDependencies != null) this.weakDependencies = weakDependencies;
     }
 
     // void propogateDependencies(List<JVModule> modules) {
@@ -88,6 +91,7 @@ class JVModule {
     install: ${install},
     dependencies: ${dependencies},
     devDependencies: ${devDependencies},
+    weakDependencies: ${weakDependencies},
 }""";
     }
 }
