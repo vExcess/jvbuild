@@ -9,7 +9,7 @@ NOTE: I would consider jvbuild a beta software. Do not expect it to be stable or
 
 ## Distribution Formats
 - Debian Package (.deb)
-- Fedora (.rpm) [Not Yet Implemented]
+- Fedora (.rpm)
 - Windows (.msi) [Not Yet Implemented]
 
 ## Example
@@ -48,6 +48,6 @@ Y = Supported
 | Windows 10/11      | P | X | - |
 | macOS              | X | X | - |
 | Debian-based Linux | Y | Y | P |
-| Fedora-based Linux | P | P | P |
+| Fedora-based Linux | Y | P | P |
 | Arch-based Linux   | P | P | P |
 | Other Linux        | ? | ? | ? |
