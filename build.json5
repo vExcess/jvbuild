@@ -16,7 +16,7 @@
             ],
             weak_dependencies: [
                 "dpkg",
-                // ""
+                "rpm"
             ]
         },
 
@@ -40,6 +40,14 @@
             install: {
                 debian_ubuntu: "sudo apt-get install dpkg",
                 fedora: "sudo dnf install dpkg"
+            }
+        },
+
+        rpm: {
+            type: "system:lib",
+            install: {
+                debian_ubuntu: "sudo apt-get install rpm",
+                fedora: "sudo dnf install rpmbuild"
             }
         },
 
